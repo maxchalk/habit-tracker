@@ -1,91 +1,82 @@
-// frontend/src/App.jsx
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ReminderList from "./components/ReminderList";
-import ReminderItem from "./components/ReminderItem";
+import ReminderForm from "./components/ReminderForm";
+import { reminderAPI } from "./services/api";
 
 function App() {
-  const [reminders, setReminders] = useState([]);
   const [title, setTitle] = useState("");
+  const queryClient = useQueryClient();
 
-  const API_URL = "http://localhost:5000/api/reminders";
+  // Fetch reminders
+  const { data: reminders = [], isLoading, error } = useQuery({
+    queryKey: ['reminders'],
+    queryFn: reminderAPI.getReminders,
+  });
 
-  // Fetch reminders from backend
-  const fetchReminders = async () => {
-    try {
-      const res = await axios.get(API_URL);
-      setReminders(res.data);
-    } catch (err) {
-      console.error("Error fetching reminders:", err);
-    }
-  };
+  // Create reminder mutation
+  const createMutation = useMutation({
+    mutationFn: reminderAPI.createReminder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+      setTitle("");
+    },
+  });
 
-  useEffect(() => {
-    fetchReminders();
-  }, []);
+  // Delete reminder mutation
+  const deleteMutation = useMutation({
+    mutationFn: reminderAPI.deleteReminder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+    },
+  });
 
-  // Add a new reminder
+  // Toggle reminder mutation
+  const toggleMutation = useMutation({
+    mutationFn: reminderAPI.toggleReminder,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reminders'] });
+    },
+  });
+
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!title) return;
-
-    try {
-      const res = await axios.post(API_URL, { title, date: new Date() });
-      setReminders((prev) => [...prev, res.data]);
-      setTitle(""); // reset input
-    } catch (err) {
-      console.error("Error adding reminder:", err);
-    }
+    
+    createMutation.mutate({
+      title,
+      date: new Date(),
+      priority: "low",
+      completed: false,
+    });
   };
 
-  // Delete a reminder
   const handleDelete = async (id) => {
-    try {
-      await axios.delete(`${API_URL}/${id}`);
-      setReminders((prev) => prev.filter((r) => r._id !== id));
-    } catch (err) {
-      console.error("Error deleting reminder:", err);
-    }
+    deleteMutation.mutate(id);
   };
 
-  // Toggle reminder as done/undone
   const handleToggleDone = async (reminder) => {
-    try {
-      const res = await axios.put(`${API_URL}/${reminder._id}`, {
-        completed: !reminder.completed,
-      });
-      setReminders((prev) =>
-        prev.map((r) => (r._id === reminder._id ? res.data : r))
-      );
-    } catch (err) {
-      console.error("Error updating reminder:", err);
-    }
+    toggleMutation.mutate(reminder._id);
   };
+
+  if (isLoading) return <div className="text-center">Loading...</div>;
+  if (error) return <div className="text-center text-red-500">Error: {error.message}</div>;
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-4">
-      <h1 className="text-2xl font-bold mb-4">Habit Tracker</h1>
-      <form onSubmit={handleAdd} className="flex mb-4 space-x-2">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Add a reminder..."
-          className="flex-1 p-2 border rounded"
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Add
-        </button>
-      </form>
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6">
+        <h1 className="text-3xl font-bold text-center text-blue-700 mb-6">
+          Habit Tracker
+        </h1>
 
-      <ReminderList
-        reminders={reminders}
-        onDelete={handleDelete}
-        onToggleDone={handleToggleDone}
-      />
+        <ReminderForm title={title} setTitle={setTitle} onAdd={handleAdd} />
+
+        <ReminderList
+          reminders={reminders}
+          onDelete={handleDelete}
+          onToggleDone={handleToggleDone}
+        />
+      </div>
     </div>
   );
 }

@@ -1,37 +1,31 @@
-// frontend/src/components/ReminderItem.jsx
-function ReminderItem({ reminder, onDelete, onToggleDone }) {
+import React from "react";
+
+const ReminderItem = ({ reminder, onToggleDone, onDelete }) => {
   return (
     <div
-      className={`flex items-center justify-between p-3 border rounded-md ${
-        reminder.completed ? "bg-green-100 line-through" : "bg-white"
+      className={`flex justify-between items-center p-4 rounded-xl shadow hover:shadow-lg transition duration-200 ${
+        reminder.completed ? "bg-green-100 line-through text-gray-400" : "bg-white"
       }`}
     >
-      <div className="flex-1">
-        <h3 className="font-semibold">{reminder.title}</h3>
-        {reminder.description && (
-          <p className="text-gray-600 text-sm">{reminder.description}</p>
-        )}
-      </div>
-
-      <div className="flex space-x-2">
+      <span className="text-lg font-medium">{reminder.title}</span>
+      <div className="flex gap-2">
         <button
           onClick={() => onToggleDone(reminder)}
-          className={`px-2 py-1 rounded ${
-            reminder.completed ? "bg-yellow-300" : "bg-green-300"
+          className={`px-4 py-2 rounded-lg text-white font-semibold transition duration-200 ${
+            reminder.completed ? "bg-yellow-500 hover:bg-yellow-600" : "bg-blue-500 hover:bg-blue-600"
           }`}
         >
           {reminder.completed ? "Undo" : "Done"}
         </button>
-
         <button
           onClick={() => onDelete(reminder._id)}
-          className="px-2 py-1 rounded bg-red-400 text-white"
+          className="px-4 py-2 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition duration-200"
         >
           Delete
         </button>
       </div>
     </div>
   );
-}
+};
 
 export default ReminderItem;

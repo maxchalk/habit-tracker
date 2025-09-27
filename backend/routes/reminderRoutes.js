@@ -1,5 +1,6 @@
 // backend/routes/reminderRoutes.js
 const express = require("express");
+const Reminder = require("../models/Reminder");
 const {
   createReminder,
   getReminders,
@@ -39,6 +40,5 @@ router.patch('/:id/done', async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
 
 module.exports = router;
