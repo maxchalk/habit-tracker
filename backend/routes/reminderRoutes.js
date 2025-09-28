@@ -1,14 +1,22 @@
-// backend/routes/reminderRoutes.js
 const express = require("express");
-const Reminder = require("../models/Reminder");
+const auth = require("../middleware/auth");
 const {
   createReminder,
   getReminders,
   updateReminder,
   deleteReminder,
+  toggleReminder,
 } = require("../controllers/reminderController");
 
 const router = express.Router();
+
+// All routes require authentication
+router.use((req, res, next) => {
+  console.log('Reminder routes middleware - Request received:', req.method, req.path);
+  next();
+});
+
+router.use(auth);
 
 // @route   POST /api/reminders
 // @desc    Create a new reminder
@@ -26,19 +34,8 @@ router.put("/:id", updateReminder);
 // @desc    Delete a reminder by ID
 router.delete("/:id", deleteReminder);
 
-// PATCH /api/reminders/:id/done
-router.patch('/:id/done', async (req, res) => {
-  try {
-    const reminder = await Reminder.findById(req.params.id);
-    if (!reminder) return res.status(404).json({ message: 'Reminder not found' });
-
-    reminder.completed = !reminder.completed; // toggle done/undone
-    await reminder.save();
-
-    res.json({ message: 'Reminder updated', reminder });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
+// @route   PATCH /api/reminders/:id/done
+// @desc    Toggle reminder completion
+router.patch('/:id/done', toggleReminder);
 
 module.exports = router;

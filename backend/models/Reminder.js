@@ -1,10 +1,9 @@
-// backend/models/Reminder.js
 const mongoose = require("mongoose");
 
 const ReminderSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true, // every reminder must have a title
+    required: true,
     trim: true
   },
   description: {
@@ -28,6 +27,11 @@ const ReminderSchema = new mongoose.Schema({
     type: String,
     enum: ["none", "daily", "weekly", "monthly", "yearly"],
     default: "none"
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
   }
 }, {
   timestamps: true

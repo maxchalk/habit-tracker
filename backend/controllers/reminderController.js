@@ -1,4 +1,3 @@
-// backend/controllers/reminderController.js
 const Reminder = require("../models/Reminder");
 
 // CREATE a new reminder
@@ -12,7 +11,13 @@ const createReminder = async (req, res) => {
       return res.status(400).json({ message: "Date is required" });
     }
 
-    const reminder = new Reminder(req.body);
+    // Add user to reminder
+    const reminderData = {
+      ...req.body,
+      user: req.user._id
+    };
+
+    const reminder = new Reminder(reminderData);
     const savedReminder = await reminder.save();
     res.status(201).json(savedReminder);
   } catch (error) {
@@ -24,7 +29,16 @@ const createReminder = async (req, res) => {
 // READ all reminders
 const getReminders = async (req, res) => {
   try {
-    const reminders = await Reminder.find().sort({ createdAt: -1 }); // Sort by newest first
+    console.log('getReminders - req.user:', req.user);
+    console.log('getReminders - req.user._id:', req.user?._id);
+    
+    if (!req.user || !req.user._id) {
+      console.log('getReminders - No user or user._id found');
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
+    const reminders = await Reminder.find({ user: req.user._id }).sort({ createdAt: -1 });
+    console.log('getReminders - Found reminders:', reminders.length);
     res.json(reminders);
   } catch (error) {
     console.error("Error fetching reminders:", error);
@@ -35,9 +49,11 @@ const getReminders = async (req, res) => {
 // UPDATE a reminder by ID
 const updateReminder = async (req, res) => {
   try {
-    const reminder = await Reminder.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const reminder = await Reminder.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
+      req.body,
+      { new: true }
+    );
     if (!reminder) {
       return res.status(404).json({ message: "Reminder not found" });
     }
@@ -51,7 +67,7 @@ const updateReminder = async (req, res) => {
 // DELETE a reminder by ID
 const deleteReminder = async (req, res) => {
   try {
-    const reminder = await Reminder.findByIdAndDelete(req.params.id);
+    const reminder = await Reminder.findOneAndDelete({ _id: req.params.id, user: req.user._id });
     if (!reminder) {
       return res.status(404).json({ message: "Reminder not found" });
     }
@@ -62,9 +78,28 @@ const deleteReminder = async (req, res) => {
   }
 };
 
+// TOGGLE reminder completion
+const toggleReminder = async (req, res) => {
+  try {
+    const reminder = await Reminder.findOne({ _id: req.params.id, user: req.user._id });
+    if (!reminder) {
+      return res.status(404).json({ message: 'Reminder not found' });
+    }
+
+    reminder.completed = !reminder.completed; // toggle done/undone
+    await reminder.save();
+
+    res.json({ message: 'Reminder updated', reminder });
+  } catch (error) {
+    console.error("Error toggling reminder:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createReminder,
   getReminders,
   updateReminder,
   deleteReminder,
+  toggleReminder,
 };

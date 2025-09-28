@@ -6,8 +6,24 @@ const cors = require("cors");
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// CORS configuration with debugging
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  console.log('Headers:', req.headers);
+  console.log('Authorization header:', req.headers.authorization);
+  next();
+});
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI, {
@@ -25,7 +41,10 @@ app.get("/", (req, res) => {
 
 // Import and use routes
 const reminderRoutes = require("./routes/reminderRoutes");
+const authRoutes = require("./routes/authRoutes");
+
 app.use("/api/reminders", reminderRoutes);
+app.use("/api/auth", authRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;
