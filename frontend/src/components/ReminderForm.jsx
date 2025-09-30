@@ -1,77 +1,111 @@
-import React from "react";
-
-const ReminderForm = ({ title, setTitle, priority, setPriority, dueDate, setDueDate, dueTime, setDueTime, repeat, setRepeat, onAdd }) => {
+const ReminderForm = ({ 
+  title, 
+  setTitle, 
+  priority, 
+  setPriority, 
+  dueDate, 
+  setDueDate, 
+  dueTime, 
+  setDueTime, 
+  repeat, 
+  setRepeat, 
+  onAdd,
+  isDarkMode = false 
+}) => {
   return (
-    <form
-      onSubmit={onAdd}
-      className="flex flex-col mb-6 gap-3 bg-white p-4 rounded-xl shadow-md"
-    >
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Add a new reminder..."
-        className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-      />
-      
-      <div className="grid grid-cols-2 gap-3">
+    <form onSubmit={onAdd} className="mb-6">
+      <div className="space-y-4">
+        {/* Title Input */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Due Date:</label>
           <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+            type="text"
+            placeholder="Add a new reminder..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-300 ${
+              isDarkMode 
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
           />
         </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Due Time:</label>
-          <input
-            type="time"
-            value={dueTime}
-            onChange={(e) => setDueTime(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+
+        {/* Priority and Repeat Row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <select
+              value={priority}
+              onChange={(e) => setPriority(e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-300 ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
+            </select>
+          </div>
+          <div>
+            <select
+              value={repeat}
+              onChange={(e) => setRepeat(e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-300 ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            >
+              <option value="none">No Repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
         </div>
+
+        {/* Date and Time Row */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-300 ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+          </div>
+          <div>
+            <input
+              type="time"
+              value={dueTime}
+              onChange={(e) => setDueTime(e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-300 ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              }`}
+            />
+          </div>
+        </div>
+
+        {/* Add Button */}
+        <button
+          type="submit"
+          className={`w-full py-3 rounded-lg font-medium transition-colors duration-300 ${
+            isDarkMode 
+              ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+              : 'bg-blue-500 hover:bg-blue-600 text-white'
+          }`}
+        >
+          Add Reminder
+        </button>
       </div>
-      
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Priority:</label>
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="low">Low (Yellow)</option>
-            <option value="medium">Medium (Orange)</option>
-            <option value="high">High (Red)</option>
-          </select>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Repeat:</label>
-          <select
-            value={repeat}
-            onChange={(e) => setRepeat(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="none">No Repeat</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
-          </select>
-        </div>
-      </div>
-      
-      <button
-        type="submit"
-        className="px-5 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow hover:bg-blue-600 transition duration-200"
-      >
-        Add Reminder
-      </button>
     </form>
   );
 };

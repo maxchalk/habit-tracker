@@ -1,138 +1,198 @@
-import React from "react";
+import { useState } from "react";
 
-const ReminderItem = ({ reminder, onToggleDone, onDelete }) => {
-  // Priority color mapping
+const ReminderItem = ({ reminder, onDelete, onToggleDone, searchTerm = "", isDarkMode = false }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Function to highlight search term
+  const highlightText = (text, searchTerm) => {
+    if (!searchTerm) return text;
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    const parts = text.split(regex);
+    
+    return parts.map((part, index) => 
+      regex.test(part) ? (
+        <mark key={index} className={`px-1 rounded transition-colors duration-300 ${
+          isDarkMode ? 'bg-yellow-600 text-yellow-100' : 'bg-yellow-200 text-yellow-900'
+        }`}>
+          {part}
+        </mark>
+      ) : part
+    );
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const reminderDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    
+    if (reminderDate.getTime() === today.getTime()) {
+      return "Today";
+    } else if (reminderDate.getTime() === today.getTime() + 86400000) {
+      return "Tomorrow";
+    } else if (reminderDate.getTime() === today.getTime() - 86400000) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    // Only show time if it's not set to end of day (23:59)
+    if (date.getHours() === 23 && date.getMinutes() === 59) {
+      return null;
+    }
+    
+    return time;
+  };
+
+  const isOverdue = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    return date < now && !reminder.completed;
+  };
+
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'high':
-        return 'border-l-4 border-red-500 bg-red-50';
-      case 'medium':
-        return 'border-l-4 border-orange-500 bg-orange-50';
-      case 'low':
-        return 'border-l-4 border-yellow-500 bg-yellow-50';
+      case "high":
+        return isDarkMode ? "border-l-red-400" : "border-l-red-500";
+      case "medium":
+        return isDarkMode ? "border-l-orange-400" : "border-l-orange-500";
+      case "low":
+        return isDarkMode ? "border-l-yellow-400" : "border-l-yellow-500";
       default:
-        return 'border-l-4 border-gray-300 bg-gray-50';
+        return isDarkMode ? "border-l-gray-500" : "border-l-gray-500";
     }
   };
 
   const getPriorityText = (priority) => {
     switch (priority) {
-      case 'high':
-        return 'High Priority';
-      case 'medium':
-        return 'Medium Priority';
-      case 'low':
-        return 'Low Priority';
+      case "high":
+        return "High Priority";
+      case "medium":
+        return "Medium Priority";
+      case "low":
+        return "Low Priority";
       default:
-        return 'No Priority';
+        return "No Priority";
     }
   };
 
   const getRepeatText = (repeat) => {
     switch (repeat) {
-      case 'daily':
-        return 'Repeats Daily';
-      case 'weekly':
-        return 'Repeats Weekly';
-      case 'monthly':
-        return 'Repeats Monthly';
-      case 'yearly':
-        return 'Repeats Yearly';
+      case "daily":
+        return "Every day";
+      case "weekly":
+        return "Every week";
+      case "monthly":
+        return "Every month";
+      case "yearly":
+        return "Every year";
+      case "none":
+        return "No repeat";
       default:
-        return '';
+        return repeat;
     }
-  };
-
-  // Format date and time
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '';
-    
-    const date = new Date(dateString);
-    const now = new Date();
-    const isOverdue = date < now && !reminder.completed;
-    
-    const dateStr = date.toLocaleDateString();
-    const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    // Check if it's set to end of day (date-only reminder)
-    const isEndOfDay = date.getHours() === 23 && date.getMinutes() === 59;
-    
-    return (
-      <div className={`text-xs mt-1 ${isOverdue ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
-        {dateStr}
-        {!isEndOfDay && ` at ${timeStr}`}
-        {isOverdue && <span className="ml-1">(OVERDUE)</span>}
-      </div>
-    );
   };
 
   return (
     <div
-      className={`flex items-center p-4 rounded-xl shadow hover:shadow-lg transition duration-200 ${getPriorityColor(reminder.priority)} ${
+      className={`rounded-lg border-l-4 ${getPriorityColor(reminder.priority)} shadow-sm hover:shadow-md transition-all duration-200 ${
         reminder.completed ? "opacity-60" : ""
-      }`}
+      } ${isOverdue(reminder.date) ? "border-l-red-600 bg-red-50" : ""} ${
+        isDarkMode 
+          ? 'bg-gray-700 border-gray-600 hover:bg-gray-600' 
+          : 'bg-white border-gray-200 hover:bg-gray-50'
+      } ${isOverdue(reminder.date) && isDarkMode ? 'bg-red-900 border-l-red-500' : ''}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* iOS-style Checkbox */}
-      <div className="flex-shrink-0 mr-4">
-        <button
-          onClick={() => onToggleDone(reminder)}
-          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 hover:scale-110 ${
-            reminder.completed
-              ? 'bg-blue-500 border-blue-500 text-white'
-              : 'border-gray-300 hover:border-blue-400'
-          }`}
-        >
-          {reminder.completed && (
-            <svg
-              className="w-4 h-4"
-              fill="currentColor"
-              viewBox="0 0 20 20"
+      <div className="p-4">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start space-x-3 flex-1">
+            {/* iOS-style checkbox */}
+            <button
+              onClick={() => onToggleDone(reminder)}
+              className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                reminder.completed
+                  ? "bg-blue-500 border-blue-500"
+                  : isDarkMode 
+                    ? "border-gray-500 hover:border-blue-400" 
+                    : "border-gray-300 hover:border-blue-400"
+              }`}
             >
-              <path
-                fillRule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
-            </svg>
-          )}
-        </button>
-      </div>
+              {reminder.completed && (
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              )}
+            </button>
 
-      {/* Reminder Content */}
-      <div className="flex-1">
-        <div className={`text-lg font-medium ${reminder.completed ? 'line-through text-gray-400' : ''}`}>
-          {reminder.title}
-        </div>
-        <div className="text-xs text-gray-500 mt-1">
-          {getPriorityText(reminder.priority)}
-          {reminder.repeat && reminder.repeat !== 'none' && (
-            <span className="ml-2 text-blue-600">• {getRepeatText(reminder.repeat)}</span>
+            <div className="flex-1 min-w-0">
+              <div className={`text-lg font-medium transition-colors duration-300 ${
+                reminder.completed 
+                  ? "line-through text-gray-500" 
+                  : isDarkMode ? "text-gray-100" : "text-gray-900"
+              }`}>
+                {highlightText(reminder.title, searchTerm)}
+              </div>
+              
+              <div className={`text-sm mt-1 transition-colors duration-300 ${
+                isDarkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>
+                <div className="flex items-center space-x-2">
+                  <span>{formatDate(reminder.date)}</span>
+                  {formatTime(reminder.date) && (
+                    <>
+                      <span>•</span>
+                      <span>{formatTime(reminder.date)}</span>
+                    </>
+                  )}
+                </div>
+                
+                <div className="flex items-center space-x-2 mt-1">
+                  <span className={`px-2 py-1 text-xs rounded-full transition-colors duration-300 ${
+                    reminder.priority === "high" 
+                      ? isDarkMode ? "bg-red-900 text-red-300" : "bg-red-100 text-red-700"
+                    : reminder.priority === "medium" 
+                      ? isDarkMode ? "bg-orange-900 text-orange-300" : "bg-orange-100 text-orange-700"
+                    : isDarkMode ? "bg-yellow-900 text-yellow-300" : "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {getPriorityText(reminder.priority)}
+                  </span>
+                  
+                  {reminder.repeat !== "none" && (
+                    <span className={`px-2 py-1 text-xs rounded-full transition-colors duration-300 ${
+                      isDarkMode ? "bg-blue-900 text-blue-300" : "bg-blue-100 text-blue-700"
+                    }`}>
+                      {getRepeatText(reminder.repeat)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Delete button */}
+          {isHovered && (
+            <button
+              onClick={() => onDelete(reminder._id)}
+              className="text-red-500 hover:text-red-700 transition-colors duration-200 p-1"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           )}
         </div>
-        {formatDateTime(reminder.date)}
-      </div>
-      
-      {/* Delete Button */}
-      <div className="flex-shrink-0 ml-2">
-        <button
-          onClick={() => onDelete(reminder._id)}
-          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition duration-200"
-          title="Delete reminder"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
-        </button>
       </div>
     </div>
   );

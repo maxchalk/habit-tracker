@@ -17,7 +17,22 @@ function App() {
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState("");
   const [repeat, setRepeat] = useState("none");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(false); // Add dark mode state
   const queryClient = useQueryClient();
+
+  // Load dark mode preference from localStorage
+  useEffect(() => {
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
+    setIsDarkMode(savedDarkMode);
+  }, []);
+
+  // Save dark mode preference to localStorage
+  const toggleDarkMode = () => {
+    const newDarkMode = !isDarkMode;
+    setIsDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode.toString());
+  };
 
   // Handle logout - moved up to avoid temporal dead zone
   const handleLogout = () => {
@@ -57,6 +72,11 @@ function App() {
       }
     }
   });
+
+  // Filter reminders based on search term
+  const filteredReminders = reminders.filter(reminder => 
+    reminder.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Create reminder mutation
   const createMutation = useMutation({
@@ -157,10 +177,20 @@ function App() {
   // Show loading while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+          : 'bg-gradient-to-br from-purple-100 to-blue-100'
+      } flex items-center justify-center`}>
         <div className="text-center">
-          <div className="text-2xl font-bold text-blue-700 mb-4">Loading...</div>
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
+          <div className={`text-2xl font-bold mb-4 ${
+            isDarkMode ? 'text-blue-300' : 'text-blue-700'
+          }`}>
+            Loading...
+          </div>
+          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
+            isDarkMode ? 'border-blue-300' : 'border-blue-700'
+          } mx-auto`}></div>
         </div>
       </div>
     );
@@ -173,6 +203,7 @@ function App() {
         <Signup
           onSignup={handleSignup}
           onSwitchToLogin={() => setShowSignup(false)}
+          isDarkMode={isDarkMode}
         />
       );
     }
@@ -181,23 +212,38 @@ function App() {
       <Login
         onLogin={handleLogin}
         onSwitchToSignup={() => setShowSignup(true)}
+        isDarkMode={isDarkMode}
       />
     );
   }
 
   // Show main app if authenticated
   if (remindersLoading) return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+        : 'bg-gradient-to-br from-purple-100 to-blue-100'
+    } flex items-center justify-center`}>
       <div className="text-center">
-        <div className="text-2xl font-bold text-blue-700 mb-4">Loading reminders...</div>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700 mx-auto"></div>
+        <div className={`text-2xl font-bold mb-4 ${
+          isDarkMode ? 'text-blue-300' : 'text-blue-700'
+        }`}>
+          Loading reminders...
+        </div>
+        <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${
+          isDarkMode ? 'border-blue-300' : 'border-blue-700'
+        } mx-auto`}></div>
       </div>
     </div>
   );
   
   if (remindersError) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center">
+      <div className={`min-h-screen transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+          : 'bg-gradient-to-br from-purple-100 to-blue-100'
+      } flex items-center justify-center`}>
         <div className="text-center text-red-500">
           <div className="text-2xl font-bold mb-4">Error loading reminders</div>
           <div className="mb-4">
@@ -217,25 +263,88 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-blue-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-6">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
+        : 'bg-gradient-to-br from-purple-100 to-blue-100'
+    } flex items-center justify-center p-4`}>
+      <div className={`w-full max-w-md rounded-3xl shadow-2xl p-6 transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gray-800 border border-gray-700' 
+          : 'bg-white'
+      }`}>
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-blue-700">
+          <h1 className={`text-3xl font-bold transition-colors duration-300 ${
+            isDarkMode ? 'text-blue-300' : 'text-blue-700'
+          }`}>
             Habit Tracker
           </h1>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-200"
-          >
-            Logout
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Dark Mode Toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className={`p-2 rounded-lg transition-colors duration-300 ${
+                isDarkMode 
+                  ? 'bg-gray-700 hover:bg-gray-600 text-yellow-400' 
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+              }`}
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+              )}
+            </button>
+            <button
+              onClick={handleLogout}
+              className={`px-4 py-2 text-sm rounded-lg transition-colors duration-300 ${
+                isDarkMode 
+                  ? 'bg-gray-600 hover:bg-gray-500 text-white' 
+                  : 'bg-gray-500 hover:bg-gray-600 text-white'
+              }`}
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {user && (
-          <div className="text-center text-gray-600 mb-4">
+          <div className={`text-center mb-4 transition-colors duration-300 ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
             Welcome, {user.name}!
           </div>
         )}
+
+        {/* Search Input with Clear Button */}
+        <div className="mb-4 relative">
+          <input
+            type="text"
+            placeholder="Search reminders..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-300 ${
+              isDarkMode 
+                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+            }`}
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors duration-300 ${
+                isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              ✕
+            </button>
+          )}
+        </div>
 
         <ReminderForm 
           title={title} 
@@ -248,13 +357,16 @@ function App() {
           setDueTime={setDueTime}
           repeat={repeat}
           setRepeat={setRepeat}
-          onAdd={handleAdd} 
+          onAdd={handleAdd}
+          isDarkMode={isDarkMode}
         />
 
         <ReminderList
-          reminders={reminders}
+          reminders={filteredReminders}
           onDelete={handleDelete}
           onToggleDone={handleToggleDone}
+          searchTerm={searchTerm}
+          isDarkMode={isDarkMode}
         />
       </div>
     </div>
