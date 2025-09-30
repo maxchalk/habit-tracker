@@ -1,12 +1,7 @@
-const User = require("../models/User");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
-// Generate JWT token
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, "your-secret-key", {
-    expiresIn: "7d"
-  });
-};
+const User = require("../models/User");
+const logger = require("../middleware/logger");
 
 // Register user
 const register = async (req, res) => {
@@ -19,25 +14,40 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create new user
-    const user = new User({ name, email, password });
+    // Hash password
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create user
+    const user = new User({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
     await user.save();
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET || "your-secret-key",
+      { expiresIn: "7d" }
+    );
+
+    logger.info(`User registered: ${email}`);
 
     res.status(201).json({
       message: "User created successfully",
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
   } catch (error) {
-    console.error("Registration error:", error);
-    res.status(400).json({ message: error.message });
+    logger.error("Registration error:", error);
+    res.status(500).json({ message: "Server error during registration" });
   }
 };
 
@@ -53,30 +63,36 @@ const login = async (req, res) => {
     }
 
     // Check password
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET || "your-secret-key",
+      { expiresIn: "7d" }
+    );
+
+    logger.info(`User logged in: ${email}`);
 
     res.json({
       message: "Login successful",
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+      },
     });
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(400).json({ message: error.message });
+    logger.error("Login error:", error);
+    res.status(500).json({ message: "Server error during login" });
   }
 };
 
 module.exports = {
   register,
-  login
+  login,
 };

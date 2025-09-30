@@ -18,13 +18,26 @@ function App() {
   const [dueTime, setDueTime] = useState("");
   const [repeat, setRepeat] = useState("none");
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDarkMode, setIsDarkMode] = useState(false); // Add dark mode state
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const queryClient = useQueryClient();
 
   // Load dark mode preference from localStorage
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('darkMode') === 'true';
     setIsDarkMode(savedDarkMode);
+  }, []);
+
+  // Register service worker for PWA
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('SW registered: ', registration);
+        })
+        .catch(registrationError => {
+          console.log('SW registration failed: ', registrationError);
+        });
+    }
   }, []);
 
   // Save dark mode preference to localStorage
