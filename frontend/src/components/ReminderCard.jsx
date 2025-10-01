@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const ReminderItem = ({ reminder, onDelete, onToggleDone, searchTerm = "", isDarkMode = false }) => {
+const ReminderCard = ({ reminder, onDelete, onToggleDone, searchTerm = "", isDarkMode = false }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   // Function to highlight search term
@@ -55,12 +55,10 @@ const ReminderItem = ({ reminder, onDelete, onToggleDone, searchTerm = "", isDar
     const reminderDate = new Date(dateString);
     const now = new Date();
     
-    // Reset both dates to midnight for accurate day comparison
-    const reminderDay = new Date(reminderDate.getFullYear(), reminderDate.getMonth(), reminderDate.getDate());
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Debug: Show the actual comparison
+    console.log(`🔍 OVERDUE: ${reminder.title} | Reminder: ${reminderDate.toLocaleString()} | Now: ${now.toLocaleString()} | Past: ${reminderDate < now}`);
     
-    // Only compare dates, not times
-    return reminderDay < today;
+    return reminderDate < now;
   };
 
   const getPriorityColor = (priority) => {
@@ -154,7 +152,6 @@ const ReminderItem = ({ reminder, onDelete, onToggleDone, searchTerm = "", isDar
                   : isDarkMode ? "text-gray-100" : "text-gray-900"
               }`}>
                 {highlightText(reminder.title, searchTerm)}
-                
               </div>
               
               <div className={`text-sm mt-1 transition-colors duration-300 ${
@@ -162,6 +159,15 @@ const ReminderItem = ({ reminder, onDelete, onToggleDone, searchTerm = "", isDar
               }`}>
                 <div className="flex items-center space-x-2">
                   <span>{formatDate(reminder.date)}</span>
+                  {formatTime(reminder.date) && (
+                    <>
+                      <span>•</span>
+                      <span>{formatTime(reminder.date)}</span>
+                    </>
+                  )}
+                </div>
+                
+                <div className="flex items-center space-x-2 mt-1">
                   {isOverdue(reminder.date) && !reminder.completed && (
                     <>
                       <span>•</span>
@@ -174,32 +180,17 @@ const ReminderItem = ({ reminder, onDelete, onToggleDone, searchTerm = "", isDar
                       </span>
                     </>
                   )}
-                  {formatTime(reminder.date) && (
-                    <>
-                      <span>•</span>
-                      <span>{formatTime(reminder.date)}</span>
-                    </>
-                  )}
-                </div>
-
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    {reminder.priority}
+                  
+                  <span className={`px-2 py-1 text-xs rounded-full transition-colors duration-300 ${
+                    reminder.priority === "high" 
+                      ? isDarkMode ? "bg-red-900 text-red-300" : "bg-red-100 text-red-700"
+                    : reminder.priority === "medium" 
+                      ? isDarkMode ? "bg-orange-900 text-orange-300" : "bg-orange-100 text-orange-700"
+                    : isDarkMode ? "bg-yellow-900 text-yellow-300" : "bg-yellow-100 text-yellow-700"
+                  }`}>
+                    {getPriorityText(reminder.priority)}
                   </span>
-                  {reminder.tags && reminder.tags.length > 0 && (
-                    <>
-                      <span>•</span>
-                      <div className="flex space-x-1">
-                        {reminder.tags.map((tag, index) => (
-                          <span key={index} className={`text-xs px-1.5 py-0.5 rounded-full ${
-                            isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </>
-                  )}
+                  
                   {reminder.repeat !== "none" && (
                     <span className={`px-2 py-1 text-xs rounded-full transition-colors duration-300 ${
                       isDarkMode ? "bg-blue-900 text-blue-300" : "bg-blue-100 text-blue-700"
@@ -229,4 +220,4 @@ const ReminderItem = ({ reminder, onDelete, onToggleDone, searchTerm = "", isDar
   );
 };
 
-export default ReminderItem;
+export default ReminderCard;

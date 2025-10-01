@@ -1,4 +1,4 @@
-import ReminderItem from "./ReminderItem";
+import ReminderCard from "./ReminderCard";
 
 const ReminderList = ({ reminders, onDelete, onToggleDone, searchTerm = "", isDarkMode = false }) => {
   if (reminders.length === 0) {
@@ -21,7 +21,7 @@ const ReminderList = ({ reminders, onDelete, onToggleDone, searchTerm = "", isDa
         {reminders.length} reminder{reminders.length !== 1 ? 's' : ''}
       </div>
       {reminders.map((reminder) => (
-        <ReminderItem
+        <ReminderCard
           key={reminder._id}
           reminder={reminder}
           onDelete={onDelete}

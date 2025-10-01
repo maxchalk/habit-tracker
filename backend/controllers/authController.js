@@ -1,4 +1,3 @@
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const logger = require("../middleware/logger");
@@ -14,26 +13,25 @@ const register = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Hash password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create user
+    // Create user (password will be hashed by the User model pre-save hook)
     const user = new User({
       name,
       email,
-      password: hashedPassword,
+      password, // Don't hash here - let the model handle it
     });
 
     await user.save();
 
     // Generate JWT token
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || "your-secret-key",
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-
     logger.info(`User registered: ${email}`);
 
     res.status(201).json({
@@ -47,7 +45,7 @@ const register = async (req, res) => {
     });
   } catch (error) {
     logger.error("Registration error:", error);
-    res.status(500).json({ message: "Server error during registration" });
+    res.status(500).json({ message: error.message || "Server error during registration" });
   }
 };
 
@@ -62,19 +60,22 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
+    // Check password using the model method
+    const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
     // Generate JWT token
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || "your-secret-key",
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
-
     logger.info(`User logged in: ${email}`);
 
     res.json({
@@ -88,7 +89,7 @@ const login = async (req, res) => {
     });
   } catch (error) {
     logger.error("Login error:", error);
-    res.status(500).json({ message: "Server error during login" });
+    res.status(500).json({ message: error.message || "Server error during login" });
   }
 };
 

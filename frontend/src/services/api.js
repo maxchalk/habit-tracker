@@ -2,8 +2,9 @@ import axios from 'axios'
 import { tokenManager } from './auth'
 
 // Create axios instance with default headers
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5000/api/reminders',
+  baseURL: `${API_BASE_URL}/api/reminders`,
   headers: {
     'Content-Type': 'application/json'
   }

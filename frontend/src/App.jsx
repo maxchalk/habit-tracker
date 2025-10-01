@@ -80,9 +80,7 @@ function App() {
     onError: (error) => {
       console.error('Reminders fetch error:', error);
       // If we get an auth error, logout the user
-      if (error.response?.status === 401) {
-        handleLogout();
-      }
+      handleLogout();
     }
   });
 

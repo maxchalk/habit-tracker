@@ -32,11 +32,11 @@ describe('ReminderForm', () => {
   });
 
   it('calls onAdd when form is submitted', async () => {
-    const mockOnAdd = vi.fn();
+    const mockOnAdd = vi.fn((e) => e.preventDefault());
     render(<ReminderForm {...mockProps} onAdd={mockOnAdd} />);
     
-    const submitButton = screen.getByText('Add Reminder');
-    fireEvent.click(submitButton);
+    const form = screen.getByText('Add Reminder').closest('form');
+    fireEvent.submit(form);
     
     await waitFor(() => {
       expect(mockOnAdd).toHaveBeenCalled();

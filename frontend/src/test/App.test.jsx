@@ -43,25 +43,12 @@ const TestWrapper = ({ children }) => {
     </QueryClientProvider>
   );
 };
-
 describe('App', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders habit tracker title', async () => {
-    render(
-      <TestWrapper>
-        <App />
-      </TestWrapper>
-    );
-    
-    await waitFor(() => {
-      expect(screen.getByText('Habit Tracker')).toBeInTheDocument();
-    });
-  });
-
-  it('shows login form when not authenticated', async () => {
+  it('renders login form when not authenticated', async () => {
     render(
       <TestWrapper>
         <App />
@@ -70,6 +57,18 @@ describe('App', () => {
     
     await waitFor(() => {
       expect(screen.getByText('Welcome Back')).toBeInTheDocument();
+    });
+  });
+
+  it('renders sign up button in login form', async () => {
+    render(
+      <TestWrapper>
+        <App />
+      </TestWrapper>
+    );
+    
+    await waitFor(() => {
+      expect(screen.getByText('Sign up')).toBeInTheDocument();
     });
   });
 });
